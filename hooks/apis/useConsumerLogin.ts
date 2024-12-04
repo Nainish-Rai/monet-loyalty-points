@@ -36,12 +36,16 @@ export const useConsumerLogin = () => {
       onSuccess: (data) => {
         console.log("Login Success:", data);
         setRequestId(data.requestId);
-        setErrorMessage(""); // Clear any previous errors
-        setCurrentView("otp"); // Transition to OTP view after successful login
+        setErrorMessage("");
+        setCurrentView("otp");
       },
-      onError: (error) => {
+      onError: (error: any) => {
         console.error("Login Error:", error);
-        setErrorMessage(error?.data?.message || "An unexpected error occurred");
+        const errorMessage =
+          error?.data?.message ||
+          error?.message ||
+          "An unexpected error occurred";
+        setErrorMessage(errorMessage);
       },
     }
   );
@@ -56,29 +60,32 @@ export const useConsumerLogin = () => {
     endpoints.auth.consumerLoginVerifyOtp,
     {
       onSuccess: (data) => {
+        if (!data) {
+          setErrorMessage("Invalid OTP verification response");
+          return;
+        }
         console.log("OTP Verification Success:", data);
         setIsLoggedIn(true);
+        setErrorMessage("");
       },
-      onError: (error) => {
+      onError: (error: any) => {
         console.error("OTP Verification Error:", error);
-        setErrorMessage("OTP verification failed");
+        const errorMessage =
+          error?.data?.message || error?.message || "OTP verification failed";
+        setErrorMessage(errorMessage);
       },
     }
   );
 
   const { setIsLoggedIn } = useTokenStore();
 
-  const handleLogin = (mobileNumber: string) => {
-    const countryCode = parsePhoneNumber(mobileNumber)?.countryCallingCode;
-    const nationalNumber = parsePhoneNumber(mobileNumber)?.nationalNumber;
-    const formattedCountryCode = `+${countryCode}`;
-
+  const handleLogin = (countryCode: string, nationalNumber: string) => {
     setMobileNumber(String(nationalNumber));
-    setCountryCode(formattedCountryCode);
+    setCountryCode(countryCode);
 
     const loginPayload = {
       mobileNumber: String(nationalNumber),
-      countryCode: formattedCountryCode,
+      countryCode: countryCode,
     };
     processConsumerLogin(loginPayload);
   };

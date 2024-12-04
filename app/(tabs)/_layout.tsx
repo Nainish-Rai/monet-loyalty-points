@@ -18,12 +18,6 @@ export default function TabLayout() {
   const { isAuthenticated } = useAuth();
   const insets = useSafeAreaInsets();
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.replace("/");
-    }
-  }, [isAuthenticated]);
-
   return (
     <Tabs
       screenOptions={{

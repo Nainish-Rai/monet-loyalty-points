@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import PhoneInput from "react-native-phone-number-input";
+import { Input, InputField } from "@/components/ui/input";
 
 interface LoginFormProps {
   isLoading?: boolean;
@@ -10,6 +11,7 @@ interface LoginFormProps {
 
 const LoginForm = ({ isLoading, error, onSuccess }: LoginFormProps) => {
   const [phoneNumber, setPhoneNumber] = React.useState("");
+  console.log(phoneNumber);
   const [regCode, setRegCode] = React.useState("");
 
   const handleSubmit = () => {
@@ -21,24 +23,39 @@ const LoginForm = ({ isLoading, error, onSuccess }: LoginFormProps) => {
   const isValidPhoneNumber = phoneNumber.length >= 10;
 
   return (
-    <View className="space-y-4">
+    <View className="flex  gap-4">
       <PhoneInput
-        defaultValue={phoneNumber}
-        defaultCode="IN"
-        onChangeFormattedText={setPhoneNumber}
+        value={phoneNumber}
+        layout="first"
+        onChangeText={(set) => setPhoneNumber(set)}
         onChangeCountry={(country) => setRegCode(country.callingCode[0])}
+        withDarkTheme
+        withShadow={false}
+        autoFocus={false}
+        placeholder="Enter phone number"
         containerStyle={{
-          backgroundColor: "#111111",
+          backgroundColor: "#1f1f1f",
           borderRadius: 8,
           borderWidth: 1,
           borderColor: "#333333",
+          width: "100%",
         }}
-        textContainerStyle={{ backgroundColor: "#111111" }}
+        textContainerStyle={{ backgroundColor: "#2c2c2c" }}
         textInputStyle={{ color: "#ffffff" }}
         codeTextStyle={{ color: "#ffffff" }}
-        countryPickerButtonStyle={{ backgroundColor: "#111111" }}
+        textInputProps={{
+          placeholderTextColor: "#666",
+        }}
+        countryPickerButtonStyle={{ backgroundColor: "#2c2c2c" }}
         disabled={isLoading}
       />
+      {/* <Input>
+        <InputField
+          value={phoneNumber}
+          onChange={(event) => setPhoneNumber(event.nativeEvent.text)}
+          placeholder="Enter phone number"
+        />
+      </Input> */}
       {error && <Text className="text-red-500 text-sm">{error}</Text>}
       <TouchableOpacity
         className={`${
