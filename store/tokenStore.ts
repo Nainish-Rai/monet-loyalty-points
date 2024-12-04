@@ -42,23 +42,38 @@ export const useTokenStore = create<TokenStore>()(
       consumerId: null,
       brandId: null,
       isLoggedIn: false,
-      setAccessToken: (token) => set({ accessToken: token }),
+      setAccessToken: async (token) => {
+        await AsyncStorage.setItem("accessToken", JSON.stringify(token));
+        set({ accessToken: token });
+      },
       clearAccessToken: () => set({ accessToken: null }),
-      setRefreshToken: (token) => set({ refreshToken: token }),
+      setRefreshToken: async (token) => {
+        await AsyncStorage.setItem("refreshToken", JSON.stringify(token));
+        set({ refreshToken: token });
+      },
       clearRefreshToken: () => set({ refreshToken: null }),
-      setConsumerId: (consumerId) => set({ consumerId }),
+      setConsumerId: async (consumerId) => {
+        await AsyncStorage.setItem("consumerId", consumerId);
+        set({ consumerId });
+      },
       setBrandId: (brandId) => set({ brandId }),
       clearBrandId: () => set({ brandId: null }),
       clearConsumerId: () => set({ consumerId: null }),
       setIsLoggedIn: (value) => set({ isLoggedIn: value }),
-      clearAll: () =>
+      clearAll: async () => {
+        await AsyncStorage.multiRemove([
+          "accessToken",
+          "refreshToken",
+          "consumerId",
+        ]);
         set({
           accessToken: null,
           refreshToken: null,
           consumerId: null,
           brandId: null,
           isLoggedIn: false,
-        }),
+        });
+      },
     }),
     {
       name: "token-storage",
@@ -73,3 +88,22 @@ export const useTokenStore = create<TokenStore>()(
     }
   )
 );
+
+// Initialize tokens from AsyncStorage
+(async () => {
+  try {
+    const [accessToken, refreshToken, consumerId] = await Promise.all([
+      AsyncStorage.getItem("accessToken"),
+      AsyncStorage.getItem("refreshToken"),
+      AsyncStorage.getItem("consumerId"),
+    ]);
+
+    if (accessToken)
+      useTokenStore.getState().setAccessToken(JSON.parse(accessToken));
+    if (refreshToken)
+      useTokenStore.getState().setRefreshToken(JSON.parse(refreshToken));
+    if (consumerId) useTokenStore.getState().setConsumerId(consumerId);
+  } catch (error) {
+    console.error("Error initializing tokens from storage:", error);
+  }
+})();

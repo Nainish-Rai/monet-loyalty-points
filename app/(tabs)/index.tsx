@@ -6,8 +6,7 @@ import {
   ActivityIndicator,
   Dimensions,
 } from "react-native";
-import { useAuth } from "@/contexts/AuthContext";
-import { router } from "expo-router";
+
 import { ThemedText } from "@/components/ThemedText";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -23,7 +22,16 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
-import type { Transaction } from "@/types/rewards";
+import { router } from "expo-router";
+import { useTokenStore } from "@/store/tokenStore";
+
+type Transaction = {
+  id: string;
+  type: "earn" | "redeem" | "transfer";
+  amount: number;
+  date: string;
+  description: string;
+};
 
 const { width } = Dimensions.get("window");
 
@@ -80,7 +88,6 @@ const BalanceCard: React.FC<BalanceCardProps> = React.memo(
 );
 
 export default function OverviewScreen() {
-  const { signOut } = useAuth();
   const [loading, setLoading] = React.useState(false);
   const [refreshing, setRefreshing] = React.useState(false);
   const insets = useSafeAreaInsets();
@@ -204,9 +211,18 @@ export default function OverviewScreen() {
     }
   }, []);
 
-  const handleLogout = useCallback(() => {
-    signOut();
-  }, [signOut]);
+  const { clearAll } = useTokenStore();
+
+  const handleLogout = async () => {
+    try {
+      await clearAll(); // Clear tokens first
+
+      await router.push("/"); // Then navigate
+      console.log("Logout successful");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
 
   // Memoize header component to prevent unnecessary rerenders
   const ListHeader = useMemo(

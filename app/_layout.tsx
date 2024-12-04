@@ -16,6 +16,8 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { QueryClientProvider } from "@tanstack/react-query";
 import queryClient from "@/utils/queryClient";
+import { useTokenStore } from "@/store/tokenStore";
+import { router, useSegments, useRootNavigationState } from "expo-router";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -26,11 +28,29 @@ export default function RootLayout() {
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
 
+  const segments = useSegments();
+  const navigationState = useRootNavigationState();
+  const { accessToken } = useTokenStore();
+
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
     }
   }, [loaded]);
+
+  useEffect(() => {
+    if (!navigationState?.key) return;
+
+    const inAuthGroup = segments[0] === "(auth)";
+    const inTabsGroup = segments[0] === "(tabs)";
+    // const isIndex = segments[0] === "index";
+
+    if (accessToken && !inTabsGroup) {
+      router.replace("/(tabs)");
+    } else if (!accessToken) {
+      router.replace("/");
+    }
+  }, [segments, navigationState?.key, accessToken]);
 
   if (!loaded) {
     return null;

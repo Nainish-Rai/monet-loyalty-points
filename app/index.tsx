@@ -11,6 +11,7 @@ import { useTokenStore } from "@/store/tokenStore";
 import OtpVerificationForm from "@/components/forms/otp-verification-form";
 import { Token } from "@/types/auth";
 import useLoginStore from "@/stores/useLoginStore";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type Tokens = {
   access: Token;
@@ -48,6 +49,23 @@ function LoginScreen() {
     requestId,
   } = useLoginStore();
 
+  // Add authentication check effect with AsyncStorage
+  useEffect(() => {
+    const checkTokens = async () => {
+      try {
+        const storedAccessToken = await AsyncStorage.getItem("accessToken");
+        if (storedAccessToken) {
+          setAccessToken(JSON.parse(storedAccessToken));
+          router.replace("/(tabs)");
+        }
+      } catch (error) {
+        console.error("Error checking stored tokens:", error);
+      }
+    };
+
+    checkTokens();
+  }, []);
+
   useEffect(() => {
     if (loginData) {
       setCurrentView("otp");
@@ -57,6 +75,19 @@ function LoginScreen() {
       // Redirect to dashboard
       const { id, tokens } = verifyOtpData;
       const { access, refresh } = tokens;
+
+      // Store tokens in AsyncStorage
+      const storeTokens = async () => {
+        try {
+          await AsyncStorage.setItem("accessToken", JSON.stringify(access));
+          await AsyncStorage.setItem("refreshToken", JSON.stringify(refresh));
+          await AsyncStorage.setItem("consumerId", id);
+        } catch (error) {
+          console.error("Error storing tokens:", error);
+        }
+      };
+
+      storeTokens();
       setAccessToken(access);
       setRefreshToken(refresh);
       setConsumerId(id);
@@ -138,19 +169,18 @@ function LoginScreen() {
       const result: OtpResponse = await response.json();
 
       if (result.id) {
-        // router.push({
-        //   pathname: "/convert",
-        //   params: {
-        //     id: result.id,
-        //   },
-        // });
-
-        //setTokens
         const { access, refresh } = result.tokens;
+
+        // Store tokens in AsyncStorage
+        await AsyncStorage.setItem("accessToken", JSON.stringify(access));
+        await AsyncStorage.setItem("refreshToken", JSON.stringify(refresh));
+        await AsyncStorage.setItem("consumerId", result.id);
+
         setAccessToken(access);
         setRefreshToken(refresh);
         setConsumerId(result.id);
-        console.log("otp verifgy hogaya", result);
+        router.replace("/(tabs)");
+        setCurrentView("login");
       }
     } catch (err) {
       setError(

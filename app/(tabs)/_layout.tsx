@@ -12,11 +12,18 @@ import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { useAuth } from "@/contexts/AuthContext";
 import { router } from "expo-router";
+import { useTokenStore } from "@/store/tokenStore";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-  const { isAuthenticated } = useAuth();
+  const { accessToken } = useTokenStore();
   const insets = useSafeAreaInsets();
+
+  useEffect(() => {
+    if (!accessToken) {
+      router.replace("/");
+    }
+  }, [accessToken]);
 
   return (
     <Tabs
